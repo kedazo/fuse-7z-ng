@@ -5,8 +5,8 @@ AM_CPPFLAGS  = -Wall -Werror -fno-strict-aliasing -std=c++0x
 
 # AM_CPPFLAGS += -pedantic
 
-AM_CPPFLAGS += @FUSE_CFLAGS@
-fuse_7z_ng_LDADD = @FUSE_LIBS@
+AM_CPPFLAGS += @fuse_CFLAGS@
+fuse_7z_ng_LDADD = @fuse_LIBS@
 
 fuse_7z_ng_SOURCES = \
 		 main.cpp \
