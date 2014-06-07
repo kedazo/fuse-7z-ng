@@ -1,4 +1,57 @@
-fuse-7z
+fuse-7z-ng
+==========
+
+fuse-7z-ng is a FUSE file system that uses the p7zip
+library to access all archive formats supported by 7-zip.
+
+This project is a fork of fuse-7z ( https://gitorious.org/fuse-7z/fuse-7z ).
+Original author: Jérôme Carretero <cJ-7z@zougloub.eu>
+
+Authors
 =======
 
-fuse-7z is a FUSE file system that uses the p7zip library
+David Kedves <david.kedves@borgcollective.eu>
+Jérôme Carretero <cJ-7z@zougloub.eu>
+
+License
+=======
+
+fuse-7z-ng is licensed under the GNU GPL v3. (See LICENSE for more information)
+
+Usage
+=====
+
+Mounting an archive with fuse-7z-ng is like mounting another typical FUSE
+filesystem:
+$ ./fuse-7z-ng --automount foobar.zip ~/mount
+
+Note: --automount makes the target folder if not present.
+
+Then do something with the mounted file system, and unmount:
+
+$ fusermount -u ~/mount
+
+See the FUSE documentation for details.
+
+Issues
+======
+
+Note that extension auto-detection (by magic) seems to have issues,
+but you can work around that by creating symlinks with proper extensions::
+$ ln -sf "[Contents]" $TMP/initrd-contents.cpio
+$ fuse-7z-ng --automount $TMP/initrd-contents.cpio ~/mnt/initrd-contents
+
+Status
+======
+
+Currently, the code is a tiny glue layer between FUSE and lib7zip,
+allowing for read access in archives.
+The design is very basic, and the code is in a proof of concept stage,
+which is not optimal but seems OK for the moment, to read archives.
+All the properties of all the files in the archive are read at initialization.
+But it happens to be quite fast, even for huge archives with hundreds
+of thousands of files.
+Only reads are planned at the moment, as the lib7zip library only supports them.
+Writes will come later, if they come : I have no idea on how to perform optimal
+writes on big archives, and I don't know any real (sane) use case of writing
+in archives.
