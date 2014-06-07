@@ -1,0 +1,6 @@
+*~
+.lock*
+build*
+.hg
+*.o
+*.Po
