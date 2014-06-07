@@ -1,11 +1,11 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <limits.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cerrno>
+#include <climits>
 #include <linux/limits.h>
 #include <sys/time.h>
 #include <unistd.h>
-#include <string.h>
+#include <cstring>
 
 #define FUSE_USE_VERSION 28
 #include <fuse.h>

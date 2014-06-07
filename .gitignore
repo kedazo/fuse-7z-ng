@@ -2,5 +2,16 @@
 .lock*
 build*
 .hg
+.*.swp
 *.o
 *.Po
+
+#generated-automake-files
+aclocal.m4
+autom4te.cache/
+compile
+configure
+depcomp
+install-sh
+missing
+

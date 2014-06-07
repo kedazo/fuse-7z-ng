@@ -1,11 +1,10 @@
-#include "fuse-7z.hpp"
-#include "fuse-7z-node.hpp"
+#include "fuse-7z.h"
+#include "fuse-7z-node.h"
 
 #include <iostream>
 #include <stdexcept>
 #include <cstdio>
 #include <sstream>
-
 
 #include "lib7zip.h"
 

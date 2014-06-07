@@ -16,7 +16,7 @@ Jérôme Carretero <cJ-7z@zougloub.eu>
 License
 =======
 
-fuse-7z-ng is licensed under the GNU GPL v3. (See LICENSE for more information)
+fuse-7z-ng is licensed under the GNU GPL v3. (See COPYING for more information)
 
 Usage
 =====

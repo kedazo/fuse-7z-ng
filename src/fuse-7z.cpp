@@ -1,3 +1,6 @@
+#include "fuse-7z.h"
+#include "fuse-7z-node.h"
+
 #include <cerrno>
 #include <climits>
 #include <cstring>
@@ -19,9 +22,6 @@
 #include <linux/limits.h>
 
 #include <fuse.h>
-
-#include "fuse-7z.hpp"
-#include "fuse-7z-node.hpp"
 
 #define STANDARD_BLOCK_SIZE (512)
 #define ERROR_STR_BUF_LEN 0x100

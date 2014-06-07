@@ -1,10 +1,11 @@
+#include "fuse-7z-node.h"
+#include "fuse-7z.h"
+
 #include <cstring>
 #include <vector>
 #include <sstream>
 #include <stdexcept>
 #include <iostream>
-#include "fuse-7z-node.hpp"
-#include "fuse-7z.hpp"
 
 using namespace std;
 
