@@ -21,8 +21,6 @@
 #include <sys/statvfs.h>
 #include <linux/limits.h>
 
-#include <fuse.h>
-
 #define STANDARD_BLOCK_SIZE (512)
 #define ERROR_STR_BUF_LEN 0x100
 
@@ -34,7 +32,7 @@ extern "C" int param;
 
 Logger::Logger() {
 	ss.str("");
-	openlog(PROGRAM, LOG_PID, LOG_USER);
+	openlog("fuse-7z-ng", LOG_PID, LOG_USER);
 }
 
 Logger::~Logger() {
@@ -77,8 +75,6 @@ Fuse7z::Fuse7z(std::string const & archiveName, std::string const & cwd) :
 Fuse7z::~Fuse7z() {
 	delete root_node;
 }
-
-extern "C" {
 
 void *fuse7z_init(struct fuse_conn_info *conn) {
 	   (void) conn;
@@ -319,4 +315,3 @@ int fuse7z_access(const char *, int) {
 	return 0;
 }
 
-} // extern "C"

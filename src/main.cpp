@@ -11,70 +11,37 @@
 #include <fuse.h>
 #include <fuse_opt.h>
 
-void * fuse7z_initlib(char const * archive, char const * cwd);
-void *fuse7z_init(struct fuse_conn_info *conn);
-void fuse7z_destroy(void *data);
-int fuse7z_getattr(const char *path, struct stat *stbuf);
-int fuse7z_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi);
-int fuse7z_statfs(const char *path, struct statvfs *buf);
-int fuse7z_open(const char *path, struct fuse_file_info *fi);
-int fuse7z_create(const char *path, mode_t mode, struct fuse_file_info *fi);
-int fuse7z_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi);
-int fuse7z_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi);
-int fuse7z_release (const char *path, struct fuse_file_info *fi);
-int fuse7z_ftruncate(const char *path, off_t offset, struct fuse_file_info *fi);
-int fuse7z_truncate(const char *path, off_t offset);
-int fuse7z_unlink(const char *path);
-int fuse7z_rmdir(const char *path);
-int fuse7z_mkdir(const char *path, mode_t mode);
-int fuse7z_rename(const char *path, const char *new_path);
-int fuse7z_utimens(const char *path, const struct timespec tv[2]);
-#if ( __FreeBSD__ >= 10 )
-int fuse7z_setxattr(const char *, const char *, const char *, size_t, int, uint32_t);
-int fuse7z_getxattr(const char *, const char *, char *, size_t, uint32_t);
-#else
-int fuse7z_setxattr(const char *, const char *, const char *, size_t, int);
-int fuse7z_getxattr(const char *, const char *, char *, size_t);
-#endif
-int fuse7z_listxattr(const char *, char *, size_t);
-int fuse7z_removexattr(const char *, const char *);
-int fuse7z_chmod(const char *, mode_t);
-int fuse7z_chown(const char *, uid_t, gid_t);
-int fuse7z_flush(const char *, struct fuse_file_info *);
-int fuse7z_fsync(const char *, int, struct fuse_file_info *);
-int fuse7z_fsyncdir(const char *, int, struct fuse_file_info *);
-int fuse7z_opendir(const char *, struct fuse_file_info *);
-int fuse7z_releasedir(const char *, struct fuse_file_info *);
-int fuse7z_access(const char *, int);
-
+#include "fuse-7z.h"
 
 /**
  * Print usage information
  */
-void print_usage() {
-    fprintf(stderr, "usage: fuse-7z-ng [options] <zip-file> <mountpoint>\n\n");
-    fprintf(stderr,
+void print_usage()
+{
+    printf ("usage: fuse-7z-ng [options] <zip-file> <mountpoint>\n\n"
             "general options:\n"
-            "	-o opt,[opt...]		mount options\n"
-            "	-h   --help			print help\n"
-            "	-V   --version		 print version\n"
-            "	-r   -o ro			 open archive in read-only mode\n"
-            "	-f					 don't detach from terminal\n"
-            "	-d					 turn on debugging, also implies -f\n"
+            "    -o opt,[opt...]        mount options\n"
+            "    -h   --help            print help\n"
+            "    -V   --version         print version\n"
+            "    -r   -o ro             open archive in read-only mode\n"
+            "    -f                     don't detach from terminal\n"
+            "    -d                     turn on debugging, also implies -f\n"
             "\n");
 }
 
 /**
  * Print version information (fuse-zip and FUSE library)
  */
-void print_version() {
-    fprintf(stderr, "fuse-7z-ng version: %s\n", VERSION);
+void print_version()
+{
+    printf ("fuse-7z-ng version: %s\n", VERSION);
 }
 
 /**
  * Parameters for command-line argument processing function
  */
-struct fuse7z_param {
+struct fuse7z_param
+{
     int syslog;
     // help shown
     int help;
@@ -106,7 +73,13 @@ struct fuse7z_param {
  * @param outargs the current output argument list
  * @return -1 on error, 0 if arg is to be discarded, 1 if arg should be kept
  */
-static int process_arg(struct fuse7z_param *param, const char *arg, int key, struct fuse_args *outargs) {
+static int
+process_arg (
+        struct fuse7z_param     *param,
+        const char              *arg,
+        int                      key,
+        struct fuse_args        *outargs)
+{
     // 'magic' fuse_opt_proc return codes
     const static int KEEP = 1;
     const static int DISCARD = 0;
@@ -152,114 +125,122 @@ static int process_arg(struct fuse7z_param *param, const char *arg, int key, str
     }
 }
 
-static const struct fuse_opt fuse7z_opts[] = {
-    FUSE_OPT_KEY("-h", KEY_HELP),
-    FUSE_OPT_KEY("--help", KEY_HELP),
-    FUSE_OPT_KEY("-V", KEY_VERSION),
-    FUSE_OPT_KEY("--version", KEY_VERSION),
-    FUSE_OPT_KEY("--automount", KEY_AUTO),
-    FUSE_OPT_KEY("--syslog", KEY_SYSLOG),
-    {NULL, 0, 0}
+static const struct fuse_opt fuse7z_opts[] =
+{
+    FUSE_OPT_KEY ("-h", KEY_HELP),
+    FUSE_OPT_KEY ("--help", KEY_HELP),
+    FUSE_OPT_KEY ("-V", KEY_VERSION),
+    FUSE_OPT_KEY ("--version", KEY_VERSION),
+    FUSE_OPT_KEY ("--automount", KEY_AUTO),
+    FUSE_OPT_KEY ("--syslog", KEY_SYSLOG),
+    FUSE_OPT_KEY (NULL, 0)
 };
 
-struct fuse_operations const fuse7z_oper = {
-    .init = fuse7z_init,
-    .destroy = fuse7z_destroy,
-    .readdir = fuse7z_readdir,
-    .getattr = fuse7z_getattr,
-    .statfs = fuse7z_statfs,
-    .open = fuse7z_open,
-    .read = fuse7z_read,
-    .write = fuse7z_write,
-    .release = fuse7z_release,
-    .unlink = fuse7z_unlink,
-    .rmdir = fuse7z_rmdir,
-    .mkdir = fuse7z_mkdir,
-    .rename = fuse7z_rename,
-    .create = fuse7z_create,
-    .chmod = fuse7z_chmod,
-    .chown = fuse7z_chown,
-    .flush = fuse7z_flush,
-    .fsync = fuse7z_fsync,
-    .fsyncdir = fuse7z_fsyncdir,
-    .opendir = fuse7z_opendir,
-    .releasedir = fuse7z_releasedir,
-    .access = fuse7z_access,
-    .utimens = fuse7z_utimens,
-    .ftruncate = fuse7z_ftruncate,
-    .truncate = fuse7z_truncate,
-    .setxattr = fuse7z_setxattr,
-    .getxattr = fuse7z_getxattr,
-    .listxattr = fuse7z_listxattr,
-    .removexattr = fuse7z_removexattr,
-#if FUSE_VERSION >= 28
-    // don't allow NULL path
-    .flag_nullpath_ok = 0,
-#endif
-};
-
-
-int main(int argc, char *argv[]) {
-    struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
+int main (int argc, char **argv)
+{
+    struct fuse_args args = FUSE_ARGS_INIT (argc, argv);
     void * data;
 
-
     char *mountpoint;
-    int multithreaded;	// this flag ignored because libzip does not supports multithreading
+    int multithreaded;  // this flag ignored because libzip does not supports multithreading
     int res;
 
-
-    if (fuse_opt_parse(&args, &param, fuse7z_opts, (fuse_opt_proc_t)process_arg)) {
+    if (fuse_opt_parse (&args, &param, fuse7z_opts, (fuse_opt_proc_t)process_arg))
+    {
         fuse_opt_free_args(&args);
         return 2;
     }
 
-
     // if all work is done inside options parsing...
-    if (param.help) {
+    if (param.help || param.version)
+    {
         fuse_opt_free_args(&args);
         return 3;
     }
 
-
-    // TODO...
+    // FIXME
     char * cwd = (char*)malloc(PATH_MAX + 1);
-    if (getcwd(cwd, PATH_MAX) == NULL) {
+    if (getcwd(cwd, PATH_MAX) == NULL)
+    {
         return 4;
     }
 
-    if (!param.version) {
-        // no file name passed
-        if (param.fileName == NULL) {
-            print_usage();
-            fuse_opt_free_args(&args);
-            return 4;
-        }
-
-        data = fuse7z_initlib(param.fileName, cwd);
-        if (data == NULL) {
-            fuse_opt_free_args(&args);
-            return 5;
-        }
+    // check if no file name passed
+    if (param.fileName == NULL)
+    {
+        print_usage();
+        fuse_opt_free_args(&args);
+        return 4;
     }
 
-    if (param.automake) {
+    data = fuse7z_initlib(param.fileName, cwd);
+    if (! data )
+    {
+        fuse_opt_free_args(&args);
+        return 5;
+    }
+
+    if (param.automake)
+    {
         mkdir(param.mountpoint, 0750);
     }
 
-    struct fuse * fuse = fuse_setup(args.argc, args.argv, &fuse7z_oper, sizeof(fuse7z_oper), &mountpoint, &multithreaded, data);
+    struct fuse_operations fuse7z_oper;
+    fuse7z_oper.init = fuse7z_init;
+    fuse7z_oper.destroy = fuse7z_destroy;
+    fuse7z_oper.readdir = fuse7z_readdir;
+    fuse7z_oper.getattr = fuse7z_getattr;
+    fuse7z_oper.statfs = fuse7z_statfs;
+    fuse7z_oper.open = fuse7z_open;
+    fuse7z_oper.read = fuse7z_read;
+    fuse7z_oper.write = fuse7z_write;
+    fuse7z_oper.release = fuse7z_release;
+    fuse7z_oper.unlink = fuse7z_unlink;
+    fuse7z_oper.rmdir = fuse7z_rmdir;
+    fuse7z_oper.mkdir = fuse7z_mkdir;
+    fuse7z_oper.rename = fuse7z_rename;
+    fuse7z_oper.create = fuse7z_create;
+    fuse7z_oper.chmod = fuse7z_chmod;
+    fuse7z_oper.chown = fuse7z_chown;
+    fuse7z_oper.flush = fuse7z_flush;
+    fuse7z_oper.fsync = fuse7z_fsync;
+    fuse7z_oper.fsyncdir = fuse7z_fsyncdir;
+    fuse7z_oper.opendir = fuse7z_opendir;
+    fuse7z_oper.releasedir = fuse7z_releasedir;
+    fuse7z_oper.access = fuse7z_access;
+    fuse7z_oper.utimens = fuse7z_utimens;
+    fuse7z_oper.ftruncate = fuse7z_ftruncate;
+    fuse7z_oper.truncate = fuse7z_truncate;
+    fuse7z_oper.setxattr = fuse7z_setxattr;
+    fuse7z_oper.getxattr = fuse7z_getxattr;
+    fuse7z_oper.listxattr = fuse7z_listxattr;
+    fuse7z_oper.removexattr = fuse7z_removexattr;
+    #if FUSE_VERSION >= 28
+    // don't allow NULL path
+    fuse7z_oper.flag_nullpath_ok = 0;
+    #endif
+
+    struct fuse * fuse = fuse_setup (
+                args.argc, args.argv,
+                &fuse7z_oper, sizeof(fuse7z_oper),
+                &mountpoint, &multithreaded, data);
 
     fuse_opt_free_args(&args);
-    if (fuse == NULL) {
+    if (fuse == NULL)
+    {
         return 7;
     }
+
     res = fuse_loop(fuse);
 
     fuse_teardown(fuse, mountpoint);
 
+    #if 0
+    // automake must not do 'remove' operation
     if (param.automake) {
         rmdir(param.mountpoint);
     }
+    #endif
 
     free(cwd);
     return (res == 0) ? 0 : 8;

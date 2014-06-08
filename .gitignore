@@ -5,6 +5,7 @@ build*
 .*.swp
 *.o
 *.Po
+tags
 
 #generated-automake-files
 aclocal.m4
@@ -14,4 +15,11 @@ configure
 depcomp
 install-sh
 missing
-
+#generated-configure-files
+INSTALL
+Makefile
+Makefile.in
+config.log
+config.status
+src/Makefile
+src/Makefile.in

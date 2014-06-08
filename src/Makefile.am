@@ -1,7 +1,8 @@
 
 bin_PROGRAMS = fuse-7z-ng
 
-AM_CPPFLAGS  = -Wall -Werror -fno-strict-aliasing -std=c++0x
+AM_CPPFLAGS = -Wall -Werror -fno-strict-aliasing -std=c++0x
+AM_CPPFLAGS = -I./lib7zip/
 
 # AM_CPPFLAGS += -pedantic
 

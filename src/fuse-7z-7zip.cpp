@@ -271,9 +271,8 @@ class Fuse7z_lib7zip : public Fuse7z {
 
 };
 
-extern "C" {
 void * fuse7z_initlib(char const * archive, char const * cwd) {
 	void * lib = new Fuse7z_lib7zip(archive, cwd);
 	return lib;
 }
-}
+
