@@ -13,7 +13,7 @@ fuse_7z_ng_LDADD  = \
 
 fuse_7z_ng_SOURCES = \
 		 main.cpp \
+		 fuse_functions.cpp \
 		 fuse-7z.cpp \
-		 fuse-7z-7zip.cpp \
 		 fuse-7z-node.cpp
 	

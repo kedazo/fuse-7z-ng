@@ -1,3 +1,19 @@
+/*
+ * This file is part of fuse-7z-ng.
+ *
+ * fuse-7z-ng is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * fuse-7z-ng is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with fuse-7z-ng.  If not, see <http://www.gnu.org/licenses/>.
+ */
 #include "fuse-7z-node.h"
 #include "fuse-7z.h"
 
@@ -14,26 +30,31 @@ const int Node::NEW_NODE_INDEX = -2;
 int Node::max_inode = 0;
 
 Node::Node (Node * parent, char const * name) :
-        open_count(0),
-        state(CLOSED),
         sname(name),
         is_dir(false),
-        parent(parent)
+        parent(parent),
+        open_count(0),
+        state(CLOSED)
 {
 	buffer = NULL;
 	this->name = sname.c_str();
 	stat.st_ino = max_inode++;
 }
 
-Node::~Node() {
-	delete buffer;
+Node::~Node()
+{
+    if (buffer)
+    	delete buffer;
 
 	for (nodelist_t::iterator i = childs.begin(); i != childs.end(); i++) {
 		delete i->second;
 	}
+    childs.clear ();
 }
 
-Node * Node::insert(char * path) {
+Node *
+Node::insert (char * path)
+{
 	//logger << "Inserting " << path << " in " << fullname() << "..." << Logger::endl;
 	char * path2 = path;
 	bool dir = false;
@@ -69,7 +90,9 @@ Node * Node::insert(char * path) {
 	}
 }
 
-std::string Node::fullname() const {
+std::string
+Node::fullname() const
+{
 	if (parent == NULL) {
 		return sname;
 	}
@@ -79,7 +102,9 @@ std::string Node::fullname() const {
 	return parent->fullname() + "/" + sname;
 }
 
-Node * Node::find(char const * path) {
+Node *
+Node::find(char const * path)
+{
 	//logger << "Finding " << path << " from " << fullname() << Logger::endl;
 	if (*path == '\0') {
 		return this;
@@ -119,3 +144,4 @@ Node * Node::find(char const * path) {
 		return NULL;
 	}
 }
+

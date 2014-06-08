@@ -1,8 +1,22 @@
-#ifndef FUSE_7Z_NODE_H
-#define FUSE_7Z_NODE_H
+/*
+ * This file is part of fuse-7z-ng.
+ *
+ * fuse-7z-ng is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * fuse-7z-ng is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with fuse-7z-ng.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#pragma once
 
 #include <string>
-#include <vector>
 #include <list>
 #include <sys/stat.h>
 #include <map>
@@ -10,61 +24,62 @@
 
 class Node;
 
-class NodeBuffer {
+class NodeBuffer
+{
 	public:
-	NodeBuffer() {}
-	virtual ~NodeBuffer() {}
+        NodeBuffer() {}
+        virtual ~NodeBuffer() {}
 };
 
-struct ltstr {
-    bool operator() (const char* s1, const char* s2) const {
+struct ltstr
+{
+    bool operator() (const char* s1, const char* s2) const
+    {
         return strcmp(s1, s2) < 0;
     }
 };
 
 typedef std::map <const char *, Node*, ltstr> nodelist_t;
 
-class Node {
-	private:
-	static int max_inode;
+class Node
+{
+    public:
+        Node(Node * parent, char const * name);
+        ~Node();
 
-	enum nodeState {
-		CLOSED,
-		OPENED,
-		CHANGED,
-		NEW
-	};
+        static const int ROOT_NODE_INDEX, NEW_NODE_INDEX;
 
-	int open_count;
-	nodeState state;
+    public:
+        NodeBuffer *buffer;
 
-	public:
-	NodeBuffer *buffer;
+        char const *name;
+        std::string sname;
+        bool is_dir;
+        int id;
+        nodelist_t childs;
+        Node *parent;
+        struct stat stat;
 
-	char const *name;
-	std::string sname;
-	bool is_dir;
-	int id;
-	nodelist_t childs;
-	Node *parent;
-	struct stat stat;
+        std::string fullname() const;
 
-	std::string fullname() const;
-
-	void parse_name(char const *fname);
-	void attach();
-
-	public:
-	static const int ROOT_NODE_INDEX, NEW_NODE_INDEX;
-
-	Node(Node * parent, char const * name);
-	~Node();
+        void parse_name(char const *fname);
+        void attach();
 
 
-	Node * find(char const *);
-	Node * insert(char * leaf);
+        Node * find(char const *);
+        Node * insert(char * leaf);
 
+    private:
+        static int max_inode;
+
+        enum nodeState {
+            CLOSED,
+            OPENED,
+            CHANGED,
+            NEW
+        };
+
+        int open_count;
+        nodeState state;
 };
-
-#endif // FUSE_7Z_NODE_H
 

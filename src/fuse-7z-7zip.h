@@ -1,3 +1,19 @@
+/*
+ * This file is part of fuse-7z-ng.
+ *
+ * fuse-7z-ng is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * fuse-7z-ng is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with fuse-7z-ng.  If not, see <http://www.gnu.org/licenses/>.
+ */
 #include "fuse-7z.h"
 #include "fuse-7z-node.h"
 
@@ -127,6 +143,7 @@ public:
 		return 0;
 	}
 };
+
 const wchar_t * index_names[] = {
 		L"kpidPackSize", //(Packed Size)
 		L"kpidAttrib", //(Attributes)
@@ -150,7 +167,6 @@ const wchar_t * index_names[] = {
 		L"kpidPath", //(FullPath)
 		L"kpidIsDir", //(IsDir)
 };
-
 
 class Fuse7z_lib7zip : public Fuse7z {
 	C7ZipLibrary lib;
@@ -271,9 +287,4 @@ class Fuse7z_lib7zip : public Fuse7z {
 	}
 
 };
-
-void * fuse7z_initlib(char const * archive, char const * cwd) {
-	void * lib = new Fuse7z_lib7zip(archive, cwd);
-	return lib;
-}
 
