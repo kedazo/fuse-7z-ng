@@ -13,7 +13,13 @@ const int Node::ROOT_NODE_INDEX = -1;
 const int Node::NEW_NODE_INDEX = -2;
 int Node::max_inode = 0;
 
-Node::Node(Node * parent, char const * name) : parent(parent), sname(name), is_dir(false), open_count(0), state(CLOSED) {
+Node::Node (Node * parent, char const * name) :
+        open_count(0),
+        state(CLOSED),
+        sname(name),
+        is_dir(false),
+        parent(parent)
+{
 	buffer = NULL;
 	this->name = sname.c_str();
 	stat.st_ino = max_inode++;

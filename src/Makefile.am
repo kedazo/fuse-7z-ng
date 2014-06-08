@@ -1,22 +1,19 @@
 
 bin_PROGRAMS = fuse-7z-ng
 
-AM_CPPFLAGS = -Wall -Werror -fno-strict-aliasing -std=c++0x
-AM_CPPFLAGS = -I./lib7zip/
+AM_CPPFLAGS  = -Wall -Werror -fno-strict-aliasing -std=c++0x
+AM_CPPFLAGS += -I../lib7zip-165/
 
 # AM_CPPFLAGS += -pedantic
 
-AM_CPPFLAGS += @fuse_CFLAGS@
-fuse_7z_ng_LDADD = @fuse_LIBS@
+AM_CPPFLAGS 	 += @fuse_CFLAGS@
+fuse_7z_ng_LDADD  = \
+		@fuse_LIBS@ \
+		../lib7zip-165/lib7zip.a
 
 fuse_7z_ng_SOURCES = \
 		 main.cpp \
 		 fuse-7z.cpp \
 		 fuse-7z-7zip.cpp \
-		 fuse-7z-node.cpp \
-		 lib7zip/HelperFuncs.cpp \
-		 lib7zip/7zipLibrary.cpp \
-		 lib7zip/7ZipArchiveItem.cpp \
-		 lib7zip/7ZipArchive.cpp
-
+		 fuse-7z-node.cpp
 	

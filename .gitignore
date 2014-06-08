@@ -5,6 +5,7 @@ build*
 .*.swp
 *.o
 *.Po
+.deps
 tags
 
 #generated-automake-files
@@ -21,5 +22,10 @@ Makefile
 Makefile.in
 config.log
 config.status
+config.guess
+config.sub
 src/Makefile
 src/Makefile.in
+#binaries
+lib7zip-165/lib7zip.a
+src/fuse-7z-ng

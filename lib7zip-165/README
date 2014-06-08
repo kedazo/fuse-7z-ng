@@ -1,0 +1,13 @@
+README
+======
+
+This directory contains a stripped version of lib7zip from
+https://code.google.com/p/lib7zip/ ( https://code.google.com/p/lib7zip/downloads/detail?name=lib7zip-1.6.5.tar.gz&can=2&q= ).
+
+I removed the not-needed sources and binaries from this directory.
+
+For the original files please go to the lib7zip site.
+
+This directory contents is licensed under MPL v 2.0 license, see COPYING here for more details.
+
+David Kedves <david.kedves@borgcollective.eu>

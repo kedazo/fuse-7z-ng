@@ -61,10 +61,10 @@ public:
 			fseek(m_pFile, 0, SEEK_END);
 			m_nFileSize = ftell(m_pFile);
 			fseek(m_pFile, 0, SEEK_SET);
-			int pos = m_strFileName.find_last_of(".");
+			size_t pos = m_strFileName.find_last_of(".");
 			if (pos != m_strFileName.npos) {
 				m_strFileExt.resize(fileName.length() - pos);
-				for (int i(0); i < m_strFileExt.length(); i++) {
+				for (unsigned i = 0; i < m_strFileExt.length(); i++) {
 					m_strFileExt[i] = m_strFileName[pos+1+i];
 				}
 			}
@@ -195,7 +195,7 @@ class Fuse7z_lib7zip : public Fuse7z {
 			archive->GetItemCount(&numItems);
 
 			logger << "Archive contains " << numItems << " entries" << Logger::endl;
-			Node * node;
+			Node * node = 0;
 			for(unsigned int i = 0;i < numItems;i++) {
 				C7ZipArchiveItem * pArchiveItem = NULL;
 				if (archive->GetItemInfo(i, &pArchiveItem)) {
@@ -231,7 +231,8 @@ class Fuse7z_lib7zip : public Fuse7z {
 						node->stat.st_mtim.tv_nsec = ((time - bias) % gain) * 100;
 					}
 				}
-				if ((i+1) % 10000 == 0) {
+
+				if (node && ((i+1) % 10000 == 0)) {
 					logger << "Indexed " << (i+1) << "th file : " << node->fullname() << Logger::endl;
 				}
 			}
