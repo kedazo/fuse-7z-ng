@@ -16,6 +16,7 @@
  */
 #include "fuse-7z.h"
 #include "fuse-7z-node.h"
+#include "logger.h"
 
 #include <iostream>
 #include <stdexcept>
@@ -42,6 +43,7 @@ class Fuse7zOutStream : public C7ZipOutStream, public NodeBuffer
 	}
 
 	virtual int Write(const void *data, unsigned int size, unsigned int *processedSize) {
+        Logger &logger = Logger::instance ();
 		logger << "Write " << data << " size=" << size << " processed " << processedSize << Logger::endl;
 		memcpy(&buffer[position], data, size);
 		*processedSize = size;
@@ -50,12 +52,14 @@ class Fuse7zOutStream : public C7ZipOutStream, public NodeBuffer
 	}
 
 	virtual int Seek(long long int offset, unsigned int seekOrigin, unsigned long long int *newPosition) {
+        Logger &logger = Logger::instance ();
 		logger << "Seek " << offset << " " << seekOrigin << Logger::endl;
 		position = seekOrigin;
 		return 0;
 	}
 
 	virtual int SetSize(unsigned long long int size) {
+        Logger &logger = Logger::instance ();
 		logger << "SetSize " << size << Logger::endl;
 		buffer.resize(size);
 		return 0;
@@ -168,13 +172,17 @@ const wchar_t * index_names[] = {
 		L"kpidIsDir", //(IsDir)
 };
 
-class Fuse7z_lib7zip : public Fuse7z {
+class Fuse7z_lib7zip : public Fuse7z
+{
 	C7ZipLibrary lib;
 	C7ZipArchive * archive;
 	Fuse7zInStream stream;
-	public:
 
-	Fuse7z_lib7zip(std::string const & filename, std::string const & cwd) : Fuse7z(filename, cwd), stream(filename) {
+	public:
+	Fuse7z_lib7zip (std::string const & filename, std::string const & cwd) :
+            Fuse7z(filename, cwd), stream(filename)
+    {
+        Logger &logger = Logger::instance ();
 		logger << "Initialization of fuse-7z with archive " << filename << Logger::endl;
 
 		if (!lib.Initialize()) {
@@ -258,14 +266,15 @@ class Fuse7z_lib7zip : public Fuse7z {
 			ss << "open archive " << archive_fn  << " failed" << endl;
 			throw runtime_error(ss.str());
 		}
-
 	}
+
 	virtual ~Fuse7z_lib7zip() {
 		delete archive;
 		lib.Deinitialize();
 	}
 
 	virtual void open(char const * path, Node * node) {
+        Logger &logger = Logger::instance ();
 		logger << "Opening file " << path << "(" << node->fullname() << ")" << Logger::endl;
 		Fuse7zOutStream * stream = new Fuse7zOutStream;
 		node->buffer = stream;
@@ -273,13 +282,17 @@ class Fuse7z_lib7zip : public Fuse7z {
 		int id = node->id;
 		archive->Extract(id, stream);
 	}
+
 	virtual void close(char const * path, Node * node) {
+        Logger &logger = Logger::instance ();
 		logger << "Closing file " << path << "(" << node->fullname() << ")" << Logger::endl;
 		Fuse7zOutStream * stream = dynamic_cast<Fuse7zOutStream*>(node->buffer);
 		delete stream;
 		node->buffer = NULL;
 	}
+
 	virtual int read(char const * path, Node * node, char * buf, size_t size, off_t offset) {
+        Logger &logger = Logger::instance ();
 		logger << "Reading file " << path << "(" << node->fullname() << ") for " << size << " at " << offset << ", arch_id=" << node->id << Logger::endl;
 		Fuse7zOutStream * stream = dynamic_cast<Fuse7zOutStream*>(node->buffer);
 		memcpy(buf, &stream->buffer[offset], size);

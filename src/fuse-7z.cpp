@@ -41,41 +41,6 @@
 
 using namespace std;
 
-struct Logger logger;
-
-extern "C" int param;
-
-Logger::Logger() {
-	ss.str("");
-	openlog("fuse-7z-ng", LOG_PID, LOG_USER);
-}
-
-Logger::~Logger() {
-	closelog();
-}
-
-void Logger::logger(std::string const & text) {
-	if (param) {
-		syslog(LOG_INFO, "%s", text.c_str());
-	}
-	else {
-		cout << "fuse-7z: " << text << std::endl;
-	}
-	ss.str("");
-}
-void Logger::err(std::string const & text) {
-	if (param) {
-		syslog(LOG_ERR, "%s", text.c_str());
-	}
-	else {
-		cerr << text << std::endl;
-	}
-}
-
-Logger & Logger::endl(Logger &f) {
-	f.logger(f.ss.str());
-	return f;
-}
 
 Fuse7z::Fuse7z(std::string const & archiveName, std::string const & cwd) :
  archive_fn(archiveName), cwd(cwd) {

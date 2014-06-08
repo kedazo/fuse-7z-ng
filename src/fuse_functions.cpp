@@ -17,6 +17,7 @@
 #include "fuse_functions.h"
 #include "fuse-7z.h"
 #include "fuse-7z-node.h"
+#include "logger.h"
 
 // it was .cpp previously, but contains class definitions...
 #include "fuse-7z-7zip.h"
@@ -48,7 +49,7 @@ fuse7z_destroy (void *_data)
 {
     Fuse7z *data = (Fuse7z *)_data;
     delete data;
-    logger << "File system unmounted" << Logger::endl;
+    Logger::instance() << "File system unmounted" << Logger::endl;
 }
 
 int
@@ -65,7 +66,7 @@ fuse7z_getattr (const char *path, struct stat *stbuf)
         return -ENOENT;
     }
 
-    //logger << "Getattr " << node->fullname() << Logger::endl;
+    //Logger::instance() << "Getattr " << node->fullname() << Logger::endl;
 
     memcpy(stbuf, &node->stat, sizeof(struct stat));
 
@@ -100,14 +101,14 @@ fuse7z_readdir (
         return -ENOENT;
     }
 
-    //logger << "Reading directory[" << path << "]" << Logger::endl;
+    //Logger::instance() << "Reading directory[" << path << "]" << Logger::endl;
 
     Node * node = data->root_node->find(path + 1);
     if (node == NULL) {
         return -ENOENT;
     }
 
-    //logger.logger(node->fullname());
+    //Logger::instance().logger(node->fullname());
 
     filler(buf, ".", NULL, 0);
     filler(buf, "..", NULL, 0);

@@ -14,19 +14,16 @@
  * You should have received a copy of the GNU General Public License
  * along with fuse-7z-ng.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <cstdio>
-#include <cstdlib>
-#include <cerrno>
-#include <climits>
-#include <linux/limits.h>
-#include <sys/time.h>
-#include <unistd.h>
-#include <cstring>
-
 #define FUSE_USE_VERSION 28
 #include <fuse.h>
 #include <fuse_opt.h>
 
+#include <cstdio>
+#include <cstring>
+#include <unistd.h>
+#include <linux/limits.h>
+
+#include "logger.h"
 #include "fuse_functions.h"
 
 /**
@@ -58,7 +55,6 @@ void print_version()
  */
 struct fuse7z_param
 {
-    int syslog;
     // help shown
     int help;
     // version information shown
@@ -69,16 +65,25 @@ struct fuse7z_param
     const char *fileName;
     // verbosity
     int verbose;
-    // int listing_progress_dot
-    int dot;
     int automake;
     char mountpoint[4096];
 } param;
 
-#define KEY_HELP (0)
-#define KEY_VERSION (1)
-#define KEY_AUTO (2)
-#define KEY_SYSLOG (3)
+#define KEY_HELP    0
+#define KEY_VERSION 1
+#define KEY_AUTO    2
+#define KEY_SYSLOG  3
+
+static const struct fuse_opt fuse7z_opts[] =
+{
+    FUSE_OPT_KEY ("-h", KEY_HELP),
+    FUSE_OPT_KEY ("--help", KEY_HELP),
+    FUSE_OPT_KEY ("-V", KEY_VERSION),
+    FUSE_OPT_KEY ("--version", KEY_VERSION),
+    FUSE_OPT_KEY ("--automount", KEY_AUTO),
+    FUSE_OPT_KEY ("--syslog", KEY_SYSLOG),
+    FUSE_OPT_KEY (NULL, 0)
+};
 
 /**
  * Function to process arguments (called from fuse_opt_parse).
@@ -117,7 +122,7 @@ process_arg (
             return DISCARD;
 
         case KEY_SYSLOG:
-            param->syslog = 1;
+            Logger::instance ().enableSyslog (true);
             return DISCARD;
 
         case FUSE_OPT_KEY_NONOPT:
@@ -141,18 +146,8 @@ process_arg (
     }
 }
 
-static const struct fuse_opt fuse7z_opts[] =
-{
-    FUSE_OPT_KEY ("-h", KEY_HELP),
-    FUSE_OPT_KEY ("--help", KEY_HELP),
-    FUSE_OPT_KEY ("-V", KEY_VERSION),
-    FUSE_OPT_KEY ("--version", KEY_VERSION),
-    FUSE_OPT_KEY ("--automount", KEY_AUTO),
-    FUSE_OPT_KEY ("--syslog", KEY_SYSLOG),
-    FUSE_OPT_KEY (NULL, 0)
-};
-
-int main (int argc, char **argv)
+int
+main (int argc, char **argv)
 {
     struct fuse_args args = FUSE_ARGS_INIT (argc, argv);
     void * data;
@@ -174,9 +169,8 @@ int main (int argc, char **argv)
         return 3;
     }
 
-    // FIXME
-    char * cwd = (char*)malloc(PATH_MAX + 1);
-    if (getcwd(cwd, PATH_MAX) == NULL)
+    char cwd[PATH_MAX+1];
+    if (getcwd (cwd, PATH_MAX) == NULL)
     {
         return 4;
     }
@@ -189,7 +183,7 @@ int main (int argc, char **argv)
         return 4;
     }
 
-    data = fuse7z_initlib(param.fileName, cwd);
+    data = fuse7z_initlib (param.fileName, cwd);
     if (! data )
     {
         fuse_opt_free_args(&args);
@@ -258,7 +252,6 @@ int main (int argc, char **argv)
     }
     #endif
 
-    free(cwd);
     return (res == 0) ? 0 : 8;
 }
 

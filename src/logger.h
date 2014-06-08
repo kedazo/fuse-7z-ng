@@ -16,44 +16,37 @@
  */
 #pragma once
 
-#include <ctime>
-#include <cstring>
-#include <cstdlib>
-#include <stdint.h>
-#include <vector>
 #include <string>
-#include <list>
 #include <sstream>
-#include <iostream>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 
-#ifdef _LFS_LARGEFILE
-typedef off64_t offset_t;
-#else
-typedef off_t offset_t;
-#endif
+class Logger
+{
+    public:
+        static Logger & instance ();
+        ~Logger();
 
-class Node;
-class Fuse7z;
-class BigBuffer;
+        void enableSyslog (bool enable = true);
 
-class Fuse7z {
-	private:
-	public:
-	std::string const archive_fn;
-	std::string const cwd;
-	Node * root_node;
+        void logger(std::string const & text);
+        void err(std::string const & text);
+        template<typename T>
+            inline Logger & operator<<(T const & data) {
+                m_stream << data;
+                return *this;
+            }
+        static Logger &endl(Logger &f);
 
-	public:
-	Fuse7z(std::string const & filename, std::string const & cwd);
-	virtual ~Fuse7z();
+        typedef Logger& (*LoggerManipulator)(Logger&);
 
-	virtual void open(char const * path, Node * n) = 0;
-	virtual void close(char const * path, Node * n) = 0;
-	virtual int read(char const * path, Node * node, char * buf, size_t size, off_t offset) = 0;
+        Logger& operator<<(LoggerManipulator manip) {
+            return manip(*this);
+        }
 
+    private:
+        Logger();
+
+        bool                m_syslog;
+        std::stringstream   m_stream;
 };
 
 
