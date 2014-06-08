@@ -15,6 +15,6 @@ fuse_7z_ng_SOURCES = \
 		 main.cpp \
 		 logger.cpp \
 		 fuse_functions.cpp \
-		 fuse7z.cpp \
-		 fuse-7z-node.cpp
+		 node.cpp \
+		 fuse7z.cpp
 	

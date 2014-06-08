@@ -14,9 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with fuse-7z-ng.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "fuse-7z-node.h"
-#include "fuse7zstream.h"
+#include "node.h"
 #include "logger.h"
+#include "fuse7zstream.h"
 
 #include <string>
 #include <lib7zip.h>

@@ -17,16 +17,15 @@
 #pragma once
 
 #include <string>
+#include <cstring>
+
 #include <list>
 #include <sys/stat.h>
 #include <map>
-#include <cstring>
-
-class Node;
 
 class NodeBuffer
 {
-	public:
+    public:
         NodeBuffer() {}
         virtual ~NodeBuffer() {}
 };
@@ -39,6 +38,7 @@ struct ltstr
     }
 };
 
+class Node;
 typedef std::map <const char *, Node*, ltstr> nodelist_t;
 
 class Node
@@ -64,7 +64,6 @@ class Node
 
         void parse_name(char const *fname);
         void attach();
-
 
         Node * find(char const *);
         Node * insert(char * leaf);

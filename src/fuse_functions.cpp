@@ -15,8 +15,9 @@
  * along with fuse-7z-ng.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "fuse_functions.h"
+
+#include "node.h"
 #include "fuse7z.h"
-#include "fuse-7z-node.h"
 #include "logger.h"
 
 #include <unistd.h>
