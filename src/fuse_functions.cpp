@@ -15,12 +15,12 @@
  * along with fuse-7z-ng.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "fuse_functions.h"
-#include "fuse-7z.h"
+#include "fuse7z.h"
 #include "fuse-7z-node.h"
 #include "logger.h"
 
-// it was .cpp previously, but contains class definitions...
-#include "fuse-7z-7zip.h"
+#include <unistd.h>
+#include <sys/types.h>
 
 #define STANDARD_BLOCK_SIZE 512
 
@@ -32,7 +32,7 @@ inline Fuse7z *get_data ()
 void *
 fuse7z_initlib (char const * archive, char const * cwd)
 {
-    void * lib = new Fuse7z_lib7zip(archive, cwd);
+    void * lib = new Fuse7z(archive, cwd);
     return lib;
 }
 

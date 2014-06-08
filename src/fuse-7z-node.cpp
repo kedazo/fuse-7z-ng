@@ -15,13 +15,9 @@
  * along with fuse-7z-ng.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "fuse-7z-node.h"
-#include "fuse-7z.h"
 
 #include <cstring>
-#include <vector>
-#include <sstream>
 #include <stdexcept>
-#include <iostream>
 
 using namespace std;
 

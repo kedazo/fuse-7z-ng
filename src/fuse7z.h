@@ -14,187 +14,41 @@
  * You should have received a copy of the GNU General Public License
  * along with fuse-7z-ng.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "fuse-7z.h"
 #include "fuse-7z-node.h"
+#include "fuse7zstream.h"
 #include "logger.h"
 
-#include <iostream>
-#include <stdexcept>
-#include <cstdio>
-#include <sstream>
+#include <string>
+#include <lib7zip.h>
 
-#include "lib7zip.h"
-
-using namespace std;
-
-
-class Fuse7zOutStream : public C7ZipOutStream, public NodeBuffer
-{
-	private:
-	unsigned long long int position;
-
-	public:
-	vector<char> buffer;
-
-	Fuse7zOutStream() : position(0) {
-	}
-
-	virtual ~Fuse7zOutStream() {
-	}
-
-	virtual int Write(const void *data, unsigned int size, unsigned int *processedSize) {
-        Logger &logger = Logger::instance ();
-		logger << "Write " << data << " size=" << size << " processed " << processedSize << Logger::endl;
-		memcpy(&buffer[position], data, size);
-		*processedSize = size;
-		position += size;
-		return 0;
-	}
-
-	virtual int Seek(long long int offset, unsigned int seekOrigin, unsigned long long int *newPosition) {
-        Logger &logger = Logger::instance ();
-		logger << "Seek " << offset << " " << seekOrigin << Logger::endl;
-		position = seekOrigin;
-		return 0;
-	}
-
-	virtual int SetSize(unsigned long long int size) {
-        Logger &logger = Logger::instance ();
-		logger << "SetSize " << size << Logger::endl;
-		buffer.resize(size);
-		return 0;
-	}
-};
-
-class Fuse7zInStream : public C7ZipInStream
-{
-private:
-	FILE * m_pFile;
-	std::string m_strFileName;
-	std::wstring m_strFileExt;
-	int m_nFileSize;
-public:
-	Fuse7zInStream(std::string const & fileName) : m_strFileName(fileName), m_strFileExt(L"7z") {
-
-		m_pFile = fopen(fileName.c_str(), "rb");
-		if (m_pFile) {
-			fseek(m_pFile, 0, SEEK_END);
-			m_nFileSize = ftell(m_pFile);
-			fseek(m_pFile, 0, SEEK_SET);
-			size_t pos = m_strFileName.find_last_of(".");
-			if (pos != m_strFileName.npos) {
-				m_strFileExt.resize(fileName.length() - pos);
-				for (unsigned i = 0; i < m_strFileExt.length(); i++) {
-					m_strFileExt[i] = m_strFileName[pos+1+i];
-				}
-			}
-		}
-		else {
-			stringstream ss;
-			ss << "Can't open " << fileName;
-			throw runtime_error(ss.str());
-		}
-	}
-
-	virtual ~Fuse7zInStream()
-	{
-		fclose(m_pFile);
-	}
-
-public:
-	virtual std::wstring GetExt() const
-	{
-		return m_strFileExt;
-	}
-
-	virtual int Read(void *data, unsigned int size, unsigned int *processedSize)
-	{
-		if (!m_pFile)
-			return 1;
-
-		int count = fread(data, 1, size, m_pFile);
-		if (count >= 0) {
-			if (processedSize != NULL)
-				*processedSize = count;
-
-			return 0;
-		}
-
-		return 1;
-	}
-
-	virtual int Seek(long long int offset, unsigned int seekOrigin, unsigned long long int *newPosition)
-	{
-		if (!m_pFile)
-			return 1;
-
-		int result = fseek(m_pFile, (long)offset, seekOrigin);
-
-		if (!result) {
-			if (newPosition)
-				*newPosition = ftell(m_pFile);
-
-			return 0;
-		}
-
-		return result;
-	}
-
-	virtual int GetSize(unsigned long long int * size)
-	{
-		if (size)
-			*size = m_nFileSize;
-		return 0;
-	}
-};
-
-const wchar_t * index_names[] = {
-		L"kpidPackSize", //(Packed Size)
-		L"kpidAttrib", //(Attributes)
-		L"kpidCTime", //(Created)
-		L"kpidATime", //(Accessed)
-		L"kpidMTime", //(Modified)
-		L"kpidSolid", //(Solid)
-		L"kpidEncrypted", //(Encrypted)
-		L"kpidUser", //(User)
-		L"kpidGroup", //(Group)
-		L"kpidComment", //(Comment)
-		L"kpidPhySize", //(Physical Size)
-		L"kpidHeadersSize", //(Headers Size)
-		L"kpidChecksum", //(Checksum)
-		L"kpidCharacts", //(Characteristics)
-		L"kpidCreatorApp", //(Creator Application)
-		L"kpidTotalSize", //(Total Size)
-		L"kpidFreeSpace", //(Free Space)
-		L"kpidClusterSize", //(Cluster Size)
-		L"kpidVolumeName", //(Label)
-		L"kpidPath", //(FullPath)
-		L"kpidIsDir", //(IsDir)
-};
-
-class Fuse7z_lib7zip : public Fuse7z
+class Fuse7z
 {
 	C7ZipLibrary lib;
 	C7ZipArchive * archive;
 	Fuse7zInStream stream;
 
 	public:
-	Fuse7z_lib7zip (std::string const & filename, std::string const & cwd) :
-            Fuse7z(filename, cwd), stream(filename)
+	Fuse7z(std::string const & filename, std::string const & cwd) :
+         stream (filename),
+         archive_fn (filename),
+         cwd (cwd)
     {
+	    root_node = new Node(NULL, "");
+    	root_node->is_dir = true;
+
         Logger &logger = Logger::instance ();
 		logger << "Initialization of fuse-7z with archive " << filename << Logger::endl;
 
 		if (!lib.Initialize()) {
-			throw runtime_error("7z library initialization failed. Is the 7z.so folder in LD_LIBRARY_PATH?");
+			throw std::runtime_error("7z library initialization failed. Is the 7z.so folder in LD_LIBRARY_PATH?");
 		}
 
 		WStringArray exts;
 
 		if (!lib.GetSupportedExts(exts)) {
-			stringstream ss;
+			std::stringstream ss;
 			ss << "Could not get list of 7z-supported file extensions";
-			throw runtime_error(ss.str());
+			throw std::runtime_error(ss.str());
 		}
 
 
@@ -262,15 +116,17 @@ class Fuse7z_lib7zip : public Fuse7z
 			}
 		}
 		else {
-			stringstream ss;
-			ss << "open archive " << archive_fn  << " failed" << endl;
-			throw runtime_error(ss.str());
+			std::stringstream ss;
+			ss << "open archive " << archive_fn  << " failed" << std::endl;
+			throw std::runtime_error(ss.str());
 		}
 	}
 
-	virtual ~Fuse7z_lib7zip() {
+	virtual ~Fuse7z() {
 		delete archive;
 		lib.Deinitialize();
+
+        delete root_node;
 	}
 
 	virtual void open(char const * path, Node * node) {
@@ -299,5 +155,10 @@ class Fuse7z_lib7zip : public Fuse7z
 		return size;
 	}
 
+    // FIXME: these must be private
+    public:
+	std::string const archive_fn;
+	std::string const cwd;
+	Node * root_node;
 };
 
