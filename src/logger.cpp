@@ -50,7 +50,7 @@ Logger::logger(std::string const & text)
 		syslog(LOG_INFO, "%s", text.c_str());
 	}
 	else {
-		std::cout << "fuse-7z: " << text << std::endl;
+		std::cerr << "fuse-7z: " << text << std::endl;
 	}
 	m_stream.str("");
 }
