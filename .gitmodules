@@ -1,0 +1,3 @@
+[submodule "syslog-win32"]
+	path = syslog-win32
+	url = https://github.com/asankah/syslog-win32.git

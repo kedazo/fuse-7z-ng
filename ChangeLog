@@ -3,3 +3,10 @@
 	
 	* Initial fork.
 
+2018-07-13	KOLANICH
+	* Added CMake build
+	* Added some macros to build for Windows. It builds, but crashes. Under debugger it partially works, but produces nonsense.
+	* Some style fixes
+	* Removed the dependencies from the repo.
+	* Added .editorconfig
+	* Added resource generation though it isn't shown by Windows because of some reason.
