@@ -1,0 +1,9 @@
+#pragma once
+static const char PACKAGE[]    = "@fuse_7z_ng_PACKAGE_NAME@";
+static const char VERSION[] = "@PACKAGE_VERSION@";
+
+#define FUSE_USE_VERSION @FUSE_USE_VERSION@
+
+enum{
+    STANDARD_BLOCK_SIZE=@fuse_7z_ng_STANDARD_BLOCK_SIZE@u,
+};

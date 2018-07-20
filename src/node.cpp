@@ -23,7 +23,7 @@ using namespace std;
 
 const int Node::ROOT_NODE_INDEX = -1;
 const int Node::NEW_NODE_INDEX = -2;
-int Node::max_inode = 0;
+unsigned int Node::max_inode = 0u;
 
 Node::Node (Node * parent, char const * name) :
     sname(name),
@@ -32,7 +32,7 @@ Node::Node (Node * parent, char const * name) :
     open_count(0),
     state(CLOSED)
 {
-    buffer = NULL;
+    buffer = nullptr;
     this->name = sname.c_str();
     stat.st_ino = max_inode++;
 }
@@ -89,10 +89,10 @@ Node::insert (char * path)
 std::string
 Node::fullname() const
 {
-    if (parent == NULL) {
+    if (parent == nullptr) {
         return sname;
     }
-    if (parent->parent == NULL) {
+    if (parent->parent == nullptr) {
         return sname;
     }
     return parent->fullname() + "/" + sname;
@@ -128,7 +128,7 @@ Node::find(char const * path)
             return child->find(path2);
         }
         //cout << "no" << endl;
-        return NULL;
+        return nullptr;
     }
     else {
         nodelist_t::iterator i = childs.find(path);
@@ -137,7 +137,7 @@ Node::find(char const * path)
             return child;
         }
         //cerr << "Child " << path << " not found in " << fullname() << " but it is not" << endl;
-        return NULL;
+        return nullptr;
     }
 }
 

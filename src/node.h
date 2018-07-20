@@ -69,7 +69,7 @@ class Node
         Node * insert(char * leaf);
 
     private:
-        static int max_inode;
+        static unsigned int max_inode;
 
         enum nodeState {
             CLOSED,

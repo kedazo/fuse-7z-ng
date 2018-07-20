@@ -14,14 +14,25 @@
  * You should have received a copy of the GNU General Public License
  * along with fuse-7z-ng.  If not, see <http://www.gnu.org/licenses/>.
  */
-#define FUSE_USE_VERSION 28
+#include "config.h"
+
 #include <fuse.h>
 #include <fuse_opt.h>
 
 #include <cstdio>
 #include <cstring>
 #include <unistd.h>
-#include <linux/limits.h>
+
+#ifndef PATH_MAX
+    #if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+        #include <windows.h>
+        #ifndef PATH_MAX
+            #define PATH_MAX MAX_PATH
+        #endif
+    #else
+        #include <linux/limits.h>
+    #endif
+#endif
 
 #include "logger.h"
 #include "fuse_functions.h"
@@ -69,10 +80,12 @@ struct fuse7z_param
     char mountpoint[4096];
 } param;
 
-#define KEY_HELP    0
-#define KEY_VERSION 1
-#define KEY_AUTO    2
-#define KEY_SYSLOG  3
+enum key:uint8_t{
+ KEY_HELP=0,
+ KEY_VERSION=1,
+ KEY_AUTO=2,
+ KEY_SYSLOG=3
+};
 
 static const struct fuse_opt fuse7z_opts[] =
 {
@@ -82,7 +95,7 @@ static const struct fuse_opt fuse7z_opts[] =
     FUSE_OPT_KEY ("--version", KEY_VERSION),
     FUSE_OPT_KEY ("--automount", KEY_AUTO),
     FUSE_OPT_KEY ("--syslog", KEY_SYSLOG),
-    FUSE_OPT_KEY (NULL, 0)
+    FUSE_OPT_KEY (nullptr, 0)
 };
 
 /**
@@ -102,9 +115,15 @@ process_arg (
         struct fuse_args        *outargs)
 {
     // 'magic' fuse_opt_proc return codes
+    #if !defined(KEEP)
     const static int KEEP = 1;
+    #endif
+    #if !defined(DISCARD)
     const static int DISCARD = 0;
+    #endif
+    #if !defined(ERROR)
     const static int ERROR = -1;
+    #endif
 
     switch (key) {
         case KEY_HELP:
@@ -155,7 +174,6 @@ main (int argc, char **argv)
     char *mountpoint;
     int multithreaded;  // this flag ignored because libzip does not supports multithreading
     int res;
-
     if (fuse_opt_parse (&args, &param, fuse7z_opts, (fuse_opt_proc_t)process_arg))
     {
         fuse_opt_free_args(&args);
@@ -170,13 +188,13 @@ main (int argc, char **argv)
     }
 
     char cwd[PATH_MAX+1];
-    if (getcwd (cwd, PATH_MAX) == NULL)
+    if (getcwd (cwd, PATH_MAX) == nullptr)
     {
         return 4;
     }
 
     // check if no file name passed
-    if (param.fileName == NULL)
+    if (param.fileName == nullptr)
     {
         print_usage();
         fuse_opt_free_args(&args);
@@ -192,7 +210,12 @@ main (int argc, char **argv)
 
     if (param.automake)
     {
-        mkdir(param.mountpoint, 0750);
+        #if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+            mkdir(param.mountpoint);
+        #else
+            mkdir(param.mountpoint, 0750);
+        #endif
+        
     }
 
     struct fuse_operations fuse7z_oper;
@@ -219,6 +242,9 @@ main (int argc, char **argv)
     fuse7z_oper.releasedir = fuse7z_releasedir;
     fuse7z_oper.access = fuse7z_access;
     fuse7z_oper.utimens = fuse7z_utimens;
+    #if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+        #undef ftruncate
+    #endif
     fuse7z_oper.ftruncate = fuse7z_ftruncate;
     fuse7z_oper.truncate = fuse7z_truncate;
     fuse7z_oper.setxattr = fuse7z_setxattr;
@@ -226,17 +252,16 @@ main (int argc, char **argv)
     fuse7z_oper.listxattr = fuse7z_listxattr;
     fuse7z_oper.removexattr = fuse7z_removexattr;
     #if FUSE_VERSION >= 28
-    // don't allow NULL path
+    // don't allow nullptr path
     fuse7z_oper.flag_nullpath_ok = 0;
     #endif
-
     struct fuse * fuse = fuse_setup (
                 args.argc, args.argv,
                 &fuse7z_oper, sizeof(fuse7z_oper),
                 &mountpoint, &multithreaded, data);
 
     fuse_opt_free_args(&args);
-    if (fuse == NULL)
+    if (fuse == nullptr)
     {
         return 7;
     }

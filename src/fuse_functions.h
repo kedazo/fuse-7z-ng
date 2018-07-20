@@ -21,7 +21,7 @@
 void *fuse7z_initlib(char const * archive, char const * cwd);
 void *fuse7z_init(struct fuse_conn_info *conn);
 void fuse7z_destroy(void *data);
-int fuse7z_getattr(const char *path, struct stat *stbuf);
+int fuse7z_getattr(const char *path, FUSE_STAT *stbuf);
 int fuse7z_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi);
 int fuse7z_statfs(const char *path, struct statvfs *buf);
 int fuse7z_open(const char *path, struct fuse_file_info *fi);

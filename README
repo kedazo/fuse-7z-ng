@@ -12,6 +12,7 @@ Authors
 
 David Kedves <david.kedves@borgcollective.eu>
 Jérôme Carretero <cJ-7z@zougloub.eu>
+For more details see git log.
 
 License
 =======
@@ -33,8 +34,16 @@ $ fusermount -u ~/mount
 
 See the FUSE documentation for details.
 
+Building
+========
+
+You need CMake for building.
+And you need to build lib7zip separately and provide CMake with the links to include and the lib. You may use https://github.com/KOLANICH/lib7zip for this, it contains some improved CMake scripts.
+
 Issues
 ======
+
+Currently it crashes on Windows with Buffer Overflow Exception. Under debugging it doesn't, but returns some nonsense like files sizes of exabytes.
 
 Note that extension auto-detection (by magic) seems to have issues,
 but you can work around that by creating symlinks with proper extensions::

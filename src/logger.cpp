@@ -14,15 +14,26 @@
  * You should have received a copy of the GNU General Public License
  * along with fuse-7z-ng.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include "config.h"
 #include "logger.h"
 #include <syslog.h>
 #include <iostream>
 
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+volatile bool win32SyslogInitialized = false;
+#endif
+
 Logger::Logger() :
         m_syslog (false)
 {
+    #if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+    if(!win32SyslogInitialized){
+        init_syslog(nullptr);
+        win32SyslogInitialized=true;
+    }
+    #endif
 	m_stream.str("");
-	openlog(PACKAGE, LOG_PID, LOG_USER);
+	openlog(const_cast<char*>(PACKAGE), LOG_PID, LOG_USER);
 }
 
 Logger::~Logger()

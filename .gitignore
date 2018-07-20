@@ -29,3 +29,5 @@ src/Makefile.in
 #binaries
 lib7zip-165/lib7zip.a
 src/fuse-7z-ng
+/src/config.h
+/src/fuse_7z_ng.rc

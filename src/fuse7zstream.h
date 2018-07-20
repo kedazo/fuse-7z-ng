@@ -22,7 +22,7 @@
 #include <cstring>
 #include <vector>
 
-class Fuse7zOutStream : public C7ZipOutStream, public NodeBuffer
+class Fuse7zOutStream : public C7ZipOutStream, public NodeBuffer //fuck
 {
 	private:
 	unsigned long long int position;
@@ -108,7 +108,7 @@ public:
 
 		int count = fread(data, 1, size, m_pFile);
 		if (count >= 0) {
-			if (processedSize != NULL)
+			if (processedSize != nullptr)
 				*processedSize = count;
 
 			return 0;

@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with fuse-7z-ng.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include "config.h"
 #include "fuse_functions.h"
 
 #include "node.h"
@@ -23,7 +24,11 @@
 #include <unistd.h>
 #include <sys/types.h>
 
-#define STANDARD_BLOCK_SIZE 512
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+#include <Windows.h>
+#endif
+//#include <experimental/filesystem>
+
 
 inline Fuse7z *get_data ()
 {
@@ -54,7 +59,7 @@ fuse7z_destroy (void *_data)
 }
 
 int
-fuse7z_getattr (const char *path, struct stat *stbuf)
+fuse7z_getattr (const char *path, FUSE_STAT *stbuf)
 {
     Fuse7z *data = get_data();
 
@@ -63,7 +68,7 @@ fuse7z_getattr (const char *path, struct stat *stbuf)
     }
 
     Node * node = data->root_node->find(path + 1);
-    if (node == NULL) {
+    if (node == nullptr) {
         return -ENOENT;
     }
 
@@ -82,8 +87,17 @@ fuse7z_getattr (const char *path, struct stat *stbuf)
 
     stbuf->st_blksize = STANDARD_BLOCK_SIZE;
     stbuf->st_blocks = (stbuf->st_size + STANDARD_BLOCK_SIZE - 1) / STANDARD_BLOCK_SIZE;
+    Logger::instance() << "stbuf->st_size " << stbuf->st_size << " = " << " stbuf->st_blocks " << stbuf->st_blocks << " * " << "stbuf->st_blksize " << stbuf->st_blksize << Logger::endl;
+    
+    
+    #if !defined(WIN32) && !defined(_WIN32) && !defined(__WIN32)
     stbuf->st_uid = geteuid();
     stbuf->st_gid = getegid();
+    #else
+    //TODO: should we really do it?
+    stbuf->st_uid = 0;
+    stbuf->st_gid = 0;
+    #endif
 
     return 0;
 }
@@ -105,17 +119,17 @@ fuse7z_readdir (
     //Logger::instance() << "Reading directory[" << path << "]" << Logger::endl;
 
     Node * node = data->root_node->find(path + 1);
-    if (node == NULL) {
+    if (node == nullptr) {
         return -ENOENT;
     }
 
     //Logger::instance().logger(node->fullname());
 
-    filler(buf, ".", NULL, 0);
-    filler(buf, "..", NULL, 0);
+    filler(buf, ".", nullptr, 0);
+    filler(buf, "..", nullptr, 0);
     for (nodelist_t::const_iterator i = node->childs.begin(); i != node->childs.end(); ++i) {
         Node * node = i->second;
-        filler(buf, node->name, NULL, 0);
+        filler(buf, node->name, nullptr, 0);
     }
 
     return 0;
@@ -128,13 +142,22 @@ fuse7z_statfs (
 {
     (void) path;
 
-    struct statvfs st;
     int err;
-    if ((err = statvfs(get_data()->cwd.c_str(), &st)) != 0) {
+    auto cwdStrPtr=get_data()->cwd.c_str();
+
+    #if !defined(WIN32) && !defined(_WIN32) && !defined(__WIN32)
+    struct statvfs st;
+    if ((err = statvfs(cwdStrPtr, &st)) != 0) {
         return -err;
     }
     buf->f_bavail = buf->f_bfree = st.f_frsize * st.f_bavail;
-
+    #else
+    ULARGE_INTEGER f_avail, f_free;
+    GetDiskFreeSpaceExA(cwdStrPtr, nullptr, &f_avail, &f_free);
+    buf->f_bavail = buf->f_bfree = f_avail.QuadPart;
+    #endif
+    Logger::instance() << "buf->f_bavail " << buf->f_bavail << " buf->f_bfree " << buf->f_bfree << Logger::endl;
+   
     buf->f_bsize = 1;
     buf->f_blocks = buf->f_bavail + 0;
 
@@ -157,7 +180,7 @@ fuse7z_open (
         return -ENOENT;
     }
     Node *node = data->root_node->find(path + 1);
-    if (node == NULL) {
+    if (node == nullptr) {
         return -ENOENT;
     }
     if (node->is_dir) {
@@ -266,7 +289,7 @@ fuse7z_utimens (const char *path, const struct timespec tv[2])
         return -ENOENT;
     }
     Node *node = data->root_node->find(path + 1);
-    if (node == NULL) {
+    if (node == nullptr) {
         return -ENOENT;
     }
     node->stat.st_mtime = tv[1].tv_sec;
