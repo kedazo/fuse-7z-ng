@@ -15,6 +15,7 @@
  * along with fuse-7z-ng.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "fuse7z.h"
+#include <assert.h>
 
 // move the implementation here
 Fuse7z::Fuse7z(std::string const & filename, std::string const & cwd) :
@@ -148,6 +149,15 @@ int Fuse7z::read(char const * path, Node * node, char * buf, size_t size, off_t 
     Logger &logger = Logger::instance ();
     logger << "Reading file " << path << "(" << node->fullname() << ") for " << size << " at " << offset << ", arch_id=" << node->id << Logger::endl;
     Fuse7zOutStream * stream = dynamic_cast<Fuse7zOutStream*>(node->buffer);
+
+    if(offset >= stream->buffer.size())
+        return 0;
+
+    if(stream->buffer.size() <= (offset + size))
+        size = stream->buffer.size() - offset;
+
+    assert(offset >= 0);
+    assert((offset + size) <= stream->buffer.size());
     memcpy(buf, &stream->buffer[offset], size);
     return size;
 }
