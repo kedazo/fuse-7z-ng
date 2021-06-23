@@ -18,6 +18,8 @@
 
 #include <fuse.h>
 
+#define FUSE_STAT struct stat
+
 void *fuse7z_initlib(char const * archive, char const * cwd);
 void *fuse7z_init(struct fuse_conn_info *conn);
 void fuse7z_destroy(void *data);
