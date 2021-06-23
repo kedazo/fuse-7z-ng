@@ -169,11 +169,11 @@ int
 main (int argc, char **argv)
 {
     struct fuse_args args = FUSE_ARGS_INIT (argc, argv);
-    void * data;
+    void * data = nullptr;
 
-    char *mountpoint;
-    int multithreaded;  // this flag ignored because libzip does not supports multithreading
-    int res;
+    char *mountpoint = nullptr;
+    int multithreaded = 0;  // this flag ignored because libzip does not supports multithreading
+    int res = 0;
     if (fuse_opt_parse (&args, &param, fuse7z_opts, (fuse_opt_proc_t)process_arg))
     {
         fuse_opt_free_args(&args);
@@ -218,7 +218,7 @@ main (int argc, char **argv)
         
     }
 
-    struct fuse_operations fuse7z_oper;
+    struct fuse_operations fuse7z_oper = {};
     fuse7z_oper.init = fuse7z_init;
     fuse7z_oper.destroy = fuse7z_destroy;
     fuse7z_oper.readdir = fuse7z_readdir;
