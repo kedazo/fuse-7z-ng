@@ -130,6 +130,8 @@ Fuse7z::~Fuse7z() {
 void Fuse7z::open(char const * path, Node * node) {
     Logger &logger = Logger::instance ();
     logger << "Opening file " << path << "(" << node->fullname() << ")" << Logger::endl;
+    if(node->buffer != nullptr)
+        delete node->buffer;
     Fuse7zOutStream * stream = new Fuse7zOutStream;
     node->buffer = stream;
     stream->SetSize(node->stat.st_size);
