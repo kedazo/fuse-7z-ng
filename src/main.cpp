@@ -251,10 +251,6 @@ main (int argc, char **argv)
     fuse7z_oper.getxattr = fuse7z_getxattr;
     fuse7z_oper.listxattr = fuse7z_listxattr;
     fuse7z_oper.removexattr = fuse7z_removexattr;
-    #if FUSE_VERSION >= 28
-    // don't allow nullptr path
-    fuse7z_oper.flag_nullpath_ok = 0;
-    #endif
     struct fuse * fuse = fuse_setup (
                 args.argc, args.argv,
                 &fuse7z_oper, sizeof(fuse7z_oper),
